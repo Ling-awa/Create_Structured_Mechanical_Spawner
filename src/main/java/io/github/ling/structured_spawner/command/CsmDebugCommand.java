@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -70,8 +71,12 @@ public final class CsmDebugCommand {
                     ? "<空表：结构内禁止自然刷怪>"
                     : describe(candidate.pool().unwrap());
             String origin = candidate.source() == StructureSpawnPools.Source.CUSTOM ? "自定义池" : "原版表";
+            StructureStart start = source.getLevel().structureManager().getStructureAt(pos, candidate.structure());
+            String bounds = start.isValid()
+                    ? " y" + start.getBoundingBox().minY() + "~" + start.getBoundingBox().maxY()
+                    : "";
             source.sendSuccess(() -> Component.literal("[CSM] - " + candidate.id()
-                    + " [" + candidate.boundingBox().getSerializedName() + " | " + origin + "] " + pool), false);
+                    + " [" + candidate.boundingBox().getSerializedName() + " | " + origin + bounds + "] " + pool), false);
         }
 
         List<String> blacklist = CsmConfig.structureBlacklist();

@@ -17,7 +17,6 @@ import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureSpawnOverride;
-import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -188,9 +187,16 @@ public final class StructureSpawnPools {
         return out;
     }
 
-    /** 该位置命中的所有结构 id（不论有没有刷怪表），供调试命令使用。 */
+    /**
+     * 该位置**真正命中**的结构 id（按包围盒或拼图判定），供调试命令使用。
+     * <p>
+     * 不能直接用 {@code getAllStructuresAt}：那是"该区块引用了哪些结构"，范围是整个结构占地，
+     * 高空位置同样会返回，用它会让命令给出误导性结果。
+     */
     public static List<ResourceLocation> structuresAt(ServerLevel level, BlockPos pos) {
-        return level.structureManager().getAllStructuresAt(pos).keySet().stream()
+        StructureManager manager = level.structureManager();
+        return manager.getAllStructuresAt(pos).keySet().stream()
+                .filter(structure -> insideAny(manager, pos, structure))
                 .map(structure -> idOf(level, structure))
                 .sorted(Comparator.comparing(ResourceLocation::toString))
                 .toList();
@@ -265,17 +271,23 @@ public final class StructureSpawnPools {
         return false;
     }
 
+    /**
+     * 是否命中结构。注意：{@code StructureManager} 的两个查询在"未命中"时返回的是
+     * {@link StructureStart#INVALID_START} 这个非 null 哨兵，**必须用 {@code isValid()} 判断**，
+     * 否则 {@code != null} 永远成立——那会让结构正上方任意高度都被判成"在结构里"。
+     */
     private static boolean contains(StructureManager manager, BlockPos pos, Structure structure,
                                     StructureSpawnOverride.BoundingBoxType boundingBox) {
         if (boundingBox == StructureSpawnOverride.BoundingBoxType.PIECE) {
-            return manager.getStructureWithPieceAt(pos, structure) != null;
+            return manager.getStructureWithPieceAt(pos, structure).isValid();
         }
-        return insideAny(manager, pos, structure);
+        return manager.getStructureAt(pos, structure).isValid();
     }
 
+    /** 包围盒命中或任一块拼图命中都算。 */
     private static boolean insideAny(StructureManager manager, BlockPos pos, Structure structure) {
-        StructureStart start = manager.getStructureAt(pos, structure);
-        return (start != null && start.isValid()) || manager.getStructureWithPieceAt(pos, structure) != null;
+        return manager.getStructureAt(pos, structure).isValid()
+                || manager.getStructureWithPieceAt(pos, structure).isValid();
     }
 
     private static ResourceLocation idOf(ServerLevel level, Structure structure) {
