@@ -73,7 +73,32 @@ gradlew.bat runData      :: 数据生成
 | `structureAwareRandom` | `true` | 总开关；关闭后完全恢复原版随机逻辑 |
 | `emptySpawnOverride` | `SUPPRESS` | 结构有空表时：`SUPPRESS` 不刷怪 / `FALLBACK` 回退群系 |
 | `structureBlacklist` | `[]` | 不走原版表的结构，写法 `minecraft:fortress` 或 `#minecraft:village` |
+| `weightBySpawnCount` | `true` | 按「权重 × 平均数量」抽取，见下节 |
 | `logStructureResolution` | `false` | 调试用日志 |
+
+### 抽取权重：为什么不是直接用 weight
+
+原版的 `weight` 抽的是**一次刷新事件**，事件里再刷 `minCount~maxCount` 只；而刷怪笼一个周期只产 1 只。
+直接沿用原始权重就变成按「事件占比」抽，**权重低但成组数量大的生物会被系统性压低**。
+
+所以默认启用 `weightBySpawnCount`，改用「个体占比」：
+
+```
+有效权重 = weight × (minCount + maxCount)      // = 2 × weight × 平均数量
+```
+
+以要塞为例（100 万次抽样实测）：
+
+| 生物 | weight | 数量 | 原始事件占比 | 修正后 |
+|---|---|---|---|---|
+| 烈焰人 | 10 | 2–3 | 35.71% | **23.38%** |
+| 凋灵骷髅 | 8 | 5 | 28.57% | **37.40%** |
+| 僵尸猪灵 | 5 | 4 | 17.86% | 18.71% |
+| 岩浆怪 | 3 | 4 | 10.71% | 11.18% |
+| 骷髅 | 2 | 5 | 7.14% | 9.34% |
+
+修正后的比例 = 把原版 N 次刷新事件摊平成 N×平均数量 个个体的构成。
+想要原始事件占比就把 `weightBySpawnCount` 设为 `false`。
 
 ### 黑名单 + 自定义池：接管某个结构
 

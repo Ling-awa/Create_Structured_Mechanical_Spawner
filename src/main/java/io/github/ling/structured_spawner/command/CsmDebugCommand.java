@@ -90,8 +90,16 @@ public final class CsmDebugCommand {
     }
 
     private static String describe(List<MobSpawnSettings.SpawnerData> data) {
+        boolean byCount = CsmConfig.weightBySpawnCount();
         return data.stream()
-                .map(entry -> nameOf(entry.type) + " ×" + entry.minCount + "-" + entry.maxCount)
+                .map(entry -> {
+                    int weight = entry.getWeight().asInt();
+                    String text = nameOf(entry.type) + " ×" + entry.minCount + "-" + entry.maxCount + " w" + weight;
+                    if (byCount) {
+                        text += "/有效" + (weight * (entry.minCount + entry.maxCount));
+                    }
+                    return text;
+                })
                 .collect(Collectors.joining(", "));
     }
 

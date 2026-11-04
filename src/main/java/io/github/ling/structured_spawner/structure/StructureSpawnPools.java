@@ -8,6 +8,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.WeightedRandomList;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -90,8 +91,53 @@ public final class StructureSpawnPools {
             }
             return null;
         }
-        Optional<MobSpawnSettings.SpawnerData> rolled = chosen.pool().getRandom(level.random);
+        Optional<MobSpawnSettings.SpawnerData> rolled = roll(chosen.pool(), level.random);
         return rolled.<Pick>map(data -> new Spawn(data.type, chosen)).orElse(null);
+    }
+
+    /**
+     * 从池子里抽一个。
+     * <p>
+     * 原版的 {@code weight} 抽的是"一次刷新事件"，事件内再按 {@code minCount~maxCount} 成组生成；
+     * 而刷怪笼一个周期只产 1 只。直接沿用原始权重会按【事件占比】抽取，
+     * 导致"权重低但成组数量大"的生物被系统性压低。
+     * <p>
+     * 开启 {@code weightBySpawnCount} 时改用【个体占比】：
+     * {@code 有效权重 = weight × (minCount + maxCount)}，
+     * 等价于 {@code 2 × weight × 平均数量}（全体同乘 2，不影响分布，且避免浮点）。
+     */
+    private static Optional<MobSpawnSettings.SpawnerData> roll(
+            WeightedRandomList<MobSpawnSettings.SpawnerData> pool, RandomSource random) {
+        List<MobSpawnSettings.SpawnerData> entries = pool.unwrap();
+        if (entries.isEmpty()) {
+            return Optional.empty();
+        }
+        if (!CsmConfig.weightBySpawnCount()) {
+            return pool.getRandom(random);
+        }
+
+        int[] effective = new int[entries.size()];
+        int total = 0;
+        for (int i = 0; i < entries.size(); i++) {
+            MobSpawnSettings.SpawnerData data = entries.get(i);
+            int weight = Math.max(0, data.getWeight().asInt());
+            int count = Math.max(0, data.minCount + data.maxCount);
+            effective[i] = weight * count;
+            total += effective[i];
+        }
+        if (total <= 0) {
+            // 全是 0 数量/0 权重时退回原始权重，至少还能抽出东西
+            return pool.getRandom(random);
+        }
+
+        int roll = random.nextInt(total);
+        for (int i = 0; i < entries.size(); i++) {
+            roll -= effective[i];
+            if (roll < 0) {
+                return Optional.of(entries.get(i));
+            }
+        }
+        return Optional.of(entries.get(entries.size() - 1));
     }
 
     /**

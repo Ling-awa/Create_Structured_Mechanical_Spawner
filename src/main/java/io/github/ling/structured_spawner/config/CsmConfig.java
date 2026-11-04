@@ -42,6 +42,14 @@ public final class CsmConfig {
                     () -> "minecraft:fortress",
                     CsmConfig::isValidBlacklistEntry);
 
+    public static final ModConfigSpec.BooleanValue WEIGHT_BY_SPAWN_COUNT = BUILDER
+            .comment("按「权重 × 平均刷新数量」计算抽取概率。",
+                    "原版按 weight 抽的是一次刷新【事件】，事件里再刷 minCount~maxCount 只；",
+                    "而刷怪笼一个周期只产 1 只。开启后按个体数量还原占比：",
+                    "   有效权重 = weight × (minCount + maxCount)",
+                    "关闭则直接使用原始 weight（按事件占比抽取）。")
+            .define("weightBySpawnCount", true);
+
     public static final ModConfigSpec.BooleanValue LOG_RESOLUTION = BUILDER
             .comment("在日志中打印结构池解析结果，用于排查判定问题。")
             .define("logStructureResolution", false);
@@ -62,6 +70,10 @@ public final class CsmConfig {
 
     public static boolean logResolution() {
         return SPEC.isLoaded() && LOG_RESOLUTION.get();
+    }
+
+    public static boolean weightBySpawnCount() {
+        return SPEC.isLoaded() && WEIGHT_BY_SPAWN_COUNT.get();
     }
 
     public static List<String> structureBlacklist() {
