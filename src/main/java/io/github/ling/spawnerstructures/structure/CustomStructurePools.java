@@ -1,4 +1,4 @@
-package io.github.ling.structured_spawner.structure;
+package io.github.ling.spawnerstructures.structure;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,7 +8,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import io.github.ling.structured_spawner.StructuredSpawner;
+import io.github.ling.spawnerstructures.MechanicalSpawnerStructures;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -43,7 +43,7 @@ import java.util.Map;
  * 命中该结构的刷怪笼会优先使用这里的池子，盖过原版 {@code spawn_overrides}。
  * 这样配合 {@code structureBlacklist} 就能做到：先禁掉默认行为，再自己定义。
  */
-@EventBusSubscriber(modid = StructuredSpawner.MODID)
+@EventBusSubscriber(modid = MechanicalSpawnerStructures.MODID)
 public final class CustomStructurePools extends SimpleJsonResourceReloadListener {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -86,10 +86,10 @@ public final class CustomStructurePools extends SimpleJsonResourceReloadListener
         for (ResourceLocation fileId : order) {
             DataResult<PoolFile> result = PoolFile.CODEC.parse(JsonOps.INSTANCE, files.get(fileId));
             result.resultOrPartial(error ->
-                            LOGGER.error("[{}] 无法解析自定义结构池 {}：{}", StructuredSpawner.MODID, fileId, error))
+                            LOGGER.error("[{}] 无法解析自定义结构池 {}：{}", MechanicalSpawnerStructures.MODID, fileId, error))
                     .ifPresent(poolFile -> {
                         if (poolFile.structures().isEmpty() || poolFile.pool().isEmpty()) {
-                            LOGGER.warn("[{}] 自定义结构池 {} 为空，已忽略", StructuredSpawner.MODID, fileId);
+                            LOGGER.warn("[{}] 自定义结构池 {} 为空，已忽略", MechanicalSpawnerStructures.MODID, fileId);
                             return;
                         }
                         WeightedRandomList<MobSpawnSettings.SpawnerData> list =
@@ -97,14 +97,14 @@ public final class CustomStructurePools extends SimpleJsonResourceReloadListener
                         for (ResourceLocation structureId : poolFile.structures()) {
                             parsed.put(structureId, list);
                         }
-                        LOGGER.info("[{}] 载入自定义结构池 {} → {} 个结构", StructuredSpawner.MODID, fileId,
+                        LOGGER.info("[{}] 载入自定义结构池 {} → {} 个结构", MechanicalSpawnerStructures.MODID, fileId,
                                 poolFile.structures().size());
                     });
         }
 
         pools = Map.copyOf(parsed);
         if (!pools.isEmpty()) {
-            LOGGER.info("[{}] 共载入 {} 条自定义结构池", StructuredSpawner.MODID, pools.size());
+            LOGGER.info("[{}] 共载入 {} 条自定义结构池", MechanicalSpawnerStructures.MODID, pools.size());
         }
     }
 }

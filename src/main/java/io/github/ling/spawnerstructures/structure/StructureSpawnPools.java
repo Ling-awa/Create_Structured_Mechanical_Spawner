@@ -1,6 +1,6 @@
-package io.github.ling.structured_spawner.structure;
+package io.github.ling.spawnerstructures.structure;
 
-import io.github.ling.structured_spawner.config.CsmConfig;
+import io.github.ling.spawnerstructures.config.CsmConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;

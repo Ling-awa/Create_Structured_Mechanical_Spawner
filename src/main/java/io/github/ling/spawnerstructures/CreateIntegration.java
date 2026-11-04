@@ -1,4 +1,4 @@
-package io.github.ling.structured_spawner;
+package io.github.ling.spawnerstructures;
 
 import net.neoforged.fml.ModList;
 

@@ -1,10 +1,10 @@
-package io.github.ling.structured_spawner.command;
+package io.github.ling.spawnerstructures.command;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import io.github.ling.structured_spawner.StructuredSpawner;
-import io.github.ling.structured_spawner.config.CsmConfig;
-import io.github.ling.structured_spawner.structure.StructureSpawnPools;
+import io.github.ling.spawnerstructures.MechanicalSpawnerStructures;
+import io.github.ling.spawnerstructures.config.CsmConfig;
+import io.github.ling.spawnerstructures.structure.StructureSpawnPools;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * <p>
  * 结构判定依赖区块已加载，所以只能查已加载的坐标。
  */
-@EventBusSubscriber(modid = StructuredSpawner.MODID)
+@EventBusSubscriber(modid = MechanicalSpawnerStructures.MODID)
 public final class CsmDebugCommand {
 
     private CsmDebugCommand() {

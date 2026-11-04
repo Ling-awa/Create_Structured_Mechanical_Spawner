@@ -1,11 +1,11 @@
-package io.github.ling.structured_spawner.requirement;
+package io.github.ling.spawnerstructures.requirement;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.oierbravo.mechanicals.foundation.recipe.IRecipeRequirement;
 import com.oierbravo.mechanicals.foundation.recipe.RecipeRequirementType;
-import io.github.ling.structured_spawner.structure.StructureSpawnPools;
+import io.github.ling.spawnerstructures.structure.StructureSpawnPools;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -21,7 +21,7 @@ import net.minecraft.world.level.levelgen.structure.Structure;
  * 配方条件：只在带有指定标签的结构内生效。
  * <pre>{@code
  * "requirements": [
- *   { "type": "create_structured_mechanical_spawner:structure_tag", "tag": "minecraft:village" }
+ *   { "type": "create_mechanical_spawner_structures:structure_tag", "tag": "minecraft:village" }
  * ]
  * }</pre>
  */

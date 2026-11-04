@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "io.github.ling.structured_spawner.mixin",
+  "package": "io.github.ling.spawnerstructures.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "LivingEntityHelperMixin"

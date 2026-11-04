@@ -1,8 +1,8 @@
-package io.github.ling.structured_spawner.requirement;
+package io.github.ling.spawnerstructures.requirement;
 
 import com.oierbravo.mechanicals.foundation.recipe.RecipeRequirementType;
 import com.oierbravo.mechanicals.register.MechanicalRegistries;
-import io.github.ling.structured_spawner.StructuredSpawner;
+import io.github.ling.spawnerstructures.MechanicalSpawnerStructures;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 public final class CsmRequirements {
 
     public static final DeferredRegister<RecipeRequirementType<?>> TYPES =
-            DeferredRegister.create(MechanicalRegistries.Keys.RECIPE_REQUIREMENT, StructuredSpawner.MODID);
+            DeferredRegister.create(MechanicalRegistries.Keys.RECIPE_REQUIREMENT, MechanicalSpawnerStructures.MODID);
 
     public static final Supplier<RecipeRequirementType<StructureRequirement>> STRUCTURE =
             TYPES.register("structure",

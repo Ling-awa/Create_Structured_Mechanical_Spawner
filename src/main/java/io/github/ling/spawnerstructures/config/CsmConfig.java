@@ -1,4 +1,4 @@
-package io.github.ling.structured_spawner.config;
+package io.github.ling.spawnerstructures.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 

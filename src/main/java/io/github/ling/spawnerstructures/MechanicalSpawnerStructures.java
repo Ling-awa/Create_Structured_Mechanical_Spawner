@@ -1,9 +1,9 @@
-package io.github.ling.structured_spawner;
+package io.github.ling.spawnerstructures;
 
 import com.mojang.logging.LogUtils;
 import com.oierbravo.create_mechanical_spawner.foundation.utility.LivingEntityHelper;
-import io.github.ling.structured_spawner.config.CsmConfig;
-import io.github.ling.structured_spawner.requirement.CsmRequirements;
+import io.github.ling.spawnerstructures.config.CsmConfig;
+import io.github.ling.spawnerstructures.requirement.CsmRequirements;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -21,15 +21,15 @@ import org.slf4j.Logger;
  * 前置依赖在 {@code META-INF/neoforge.mods.toml} 里声明为 mandatory，
  * 加载器会在缺失时报错并阻止进入游戏。
  */
-@Mod(StructuredSpawner.MODID)
-public class StructuredSpawner {
+@Mod(MechanicalSpawnerStructures.MODID)
+public class MechanicalSpawnerStructures {
 
     /** 必须与 gradle.properties 的 mod_id、neoforge.mods.toml 的 modId 保持一致。 */
-    public static final String MODID = "create_structured_mechanical_spawner";
+    public static final String MODID = "create_mechanical_spawner_structures";
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public StructuredSpawner(IEventBus modEventBus, ModContainer modContainer) {
+    public MechanicalSpawnerStructures(IEventBus modEventBus, ModContainer modContainer) {
         // mod bus（IEventBus）：模组生命周期事件与 DeferredRegister 的注册挂载点。
         modEventBus.addListener(this::commonSetup);
 

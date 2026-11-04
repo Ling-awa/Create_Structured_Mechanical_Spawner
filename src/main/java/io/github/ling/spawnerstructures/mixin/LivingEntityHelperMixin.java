@@ -1,7 +1,7 @@
-package io.github.ling.structured_spawner.mixin;
+package io.github.ling.spawnerstructures.mixin;
 
 import com.oierbravo.create_mechanical_spawner.foundation.utility.LivingEntityHelper;
-import io.github.ling.structured_spawner.structure.StructureSpawnPools;
+import io.github.ling.spawnerstructures.structure.StructureSpawnPools;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;

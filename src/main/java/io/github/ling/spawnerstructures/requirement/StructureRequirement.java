@@ -1,11 +1,11 @@
-package io.github.ling.structured_spawner.requirement;
+package io.github.ling.spawnerstructures.requirement;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.oierbravo.mechanicals.foundation.recipe.IRecipeRequirement;
 import com.oierbravo.mechanicals.foundation.recipe.RecipeRequirementType;
-import io.github.ling.structured_spawner.structure.StructureSpawnPools;
+import io.github.ling.spawnerstructures.structure.StructureSpawnPools;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -18,8 +18,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * 配方条件：只在指定结构内生效。
  * <pre>{@code
  * "requirements": [
- *   { "type": "create_structured_mechanical_spawner:structure", "structure": "minecraft:fortress" },
- *   { "type": "create_structured_mechanical_spawner:structure", "structure": "minecraft:bastion_remnant", "negate": true }
+ *   { "type": "create_mechanical_spawner_structures:structure", "structure": "minecraft:fortress" },
+ *   { "type": "create_mechanical_spawner_structures:structure", "structure": "minecraft:bastion_remnant", "negate": true }
  * ]
  * }</pre>
  */

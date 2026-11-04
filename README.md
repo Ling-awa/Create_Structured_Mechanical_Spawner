@@ -1,4 +1,4 @@
-# Create: Structured Mechanical Spawner
+# Mechanical Spawner: Structures
 
 Create: Mechanical Spawner（动力刷怪笼）的附属模组，构建于 **Minecraft 1.21.1 / NeoForge 21.1.249**。
 
@@ -22,7 +22,7 @@ Create: Mechanical Spawner（动力刷怪笼）的附属模组，构建于 **Min
 gradlew.bat build
 ```
 
-产物：`build/libs/create_structured_mechanical_spawner-<版本>.jar`
+产物：`build/libs/create_mechanical_spawner_structures-<版本>.jar`
 
 ```bat
 gradlew.bat runClient    :: 开发客户端
@@ -69,7 +69,7 @@ gradlew.bat runData      :: 数据生成
 
 ### 配置
 
-`config/create_structured_mechanical_spawner-server.toml`：
+`config/create_mechanical_spawner_structures-server.toml`：
 
 | 键 | 默认 | 说明 |
 |---|---|---|
@@ -107,7 +107,7 @@ gradlew.bat runData      :: 数据生成
 
 两步走，先禁掉默认行为，再定义自己的池子。
 
-**1) 配置里点名禁掉原版表**（`config/create_structured_mechanical_spawner-server.toml`）：
+**1) 配置里点名禁掉原版表**（`config/create_mechanical_spawner_structures-server.toml`）：
 
 ```toml
 structureBlacklist = ["minecraft:fortress", "#minecraft:village"]
@@ -151,7 +151,7 @@ structureBlacklist = ["minecraft:fortress", "#minecraft:village"]
   "output": "minecraft:zombie",
   "processingTime": 2500,
   "requirements": [
-    { "type": "create_structured_mechanical_spawner:structure", "structure": "minecraft:fortress" }
+    { "type": "create_mechanical_spawner_structures:structure", "structure": "minecraft:fortress" }
   ]
 }
 ```
@@ -165,8 +165,8 @@ structureBlacklist = ["minecraft:fortress", "#minecraft:village"]
 ## 结构
 
 ```
-src/main/java/io/github/ling/structured_spawner/
-├── StructuredSpawner.java          入口（@Mod，modid = create_structured_mechanical_spawner）
+src/main/java/io/github/ling/spawnerstructures/
+├── MechanicalSpawnerStructures.java          入口（@Mod，modid = create_mechanical_spawner_structures）
 ├── CreateIntegration.java          前置模组检测
 ├── config/CsmConfig.java           服务端配置
 ├── structure/StructureSpawnPools.java  结构刷怪表的解析与抽取
