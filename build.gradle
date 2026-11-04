@@ -76,7 +76,8 @@ dependencies {
     runtimeOnly("curse.maven:create-mechanical-spawner-${mechanical_spawner_project}:${mechanical_spawner_file}")
 
     // ---- 传递前置：Mechanicals Lib ----
-    // 我们不直接调用它的 API，只在开发环境提供真实 jar，否则 runClient 会因缺依赖拒载。
+    // 我们用它的配方条件注册表（structure / structure_tag），所以编译期也要。
+    compileOnly("maven.modrinth:mechanicals-lib:${mechanicals_version}")
     runtimeOnly("maven.modrinth:mechanicals-lib:${mechanicals_version}")
 }
 

@@ -5,6 +5,10 @@ modLoader="javafml"
 loaderVersion="[1,)"
 license="${mod_license}"
 
+# Mixin 配置（NeoForge 1.20.2+ 走 TOML 声明，不再用 manifest 的 MixinConfigs）
+[[mixins]]
+config="csm.mixins.json"
+
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
