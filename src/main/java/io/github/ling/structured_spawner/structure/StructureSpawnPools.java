@@ -26,12 +26,25 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * 把「刷新点所在结构的原版刷怪表」翻译成一次随机抽取。
+ * 把「刷新点所在结构的刷怪表」翻译成一次随机抽取。
  * <p>
- * 只读取原版数据（{@link Structure#spawnOverrides()}），不内置任何生物映射表：
- * 结构声明了什么，这里就只能抽到什么；结构没声明，就交回原版群系逻辑。
+ * 数据来源的优先级（同一位置命中多个结构时，自定义池优先于原版表）：
+ * <ol>
+ *   <li>数据包自定义池 {@code structure_spawn_pool}（玩家可覆盖）</li>
+ *   <li>原版 {@code spawn_overrides}（结构自己声明的表）</li>
+ * </ol>
+ * 被 {@code structureBlacklist} 列入的结构不会使用原版表，直接回退群系池；
+ * 但它的自定义池仍然生效——即「先禁掉默认，再自己定义」。
  */
 public final class StructureSpawnPools {
+
+    /** 本次判定所用池子的来源。 */
+    public enum Source {
+        /** 数据包 {@code structure_spawn_pool} 提供的自定义池。 */
+        CUSTOM,
+        /** 结构自带的原版 {@code spawn_overrides}。 */
+        VANILLA
+    }
 
     /** 一次解析的结论；{@code null} 表示"不接管"，调用方应放行走原版逻辑。 */
     public sealed interface Pick permits Spawn, Suppress {
@@ -49,7 +62,8 @@ public final class StructureSpawnPools {
     public record Candidate(ResourceLocation id,
                             Structure structure,
                             StructureSpawnOverride.BoundingBoxType boundingBox,
-                            WeightedRandomList<MobSpawnSettings.SpawnerData> pool) {
+                            WeightedRandomList<MobSpawnSettings.SpawnerData> pool,
+                            Source source) {
     }
 
     private StructureSpawnPools() {
@@ -58,7 +72,7 @@ public final class StructureSpawnPools {
     /**
      * 解析 {@code pos} 所在结构并抽一只怪。
      *
-     * @return {@code null} = 不接管（开关关闭 / 不在结构内 / 结构没声明 monster 刷怪表）
+     * @return {@code null} = 不接管（开关关闭 / 不在结构内 / 结构没声明表且没有自定义池）
      */
     @Nullable
     public static Pick pick(ServerLevel level, BlockPos pos) {
@@ -81,14 +95,14 @@ public final class StructureSpawnPools {
     }
 
     /**
-     * 列出 {@code pos} 处所有"确实生效"的结构刷怪表。
+     * 列出 {@code pos} 处所有"确实生效"的刷怪池，按「自定义优先、其次结构 id」排序。
      * <p>
-     * 生效判定跟随原版数据里的 {@code bounding_box}：
+     * 原版表的生效判定跟随数据里的 {@code bounding_box}：
      * <ul>
      *   <li>{@code STRUCTURE}（JSON 的 {@code full}）：点在结构包围盒内即可</li>
      *   <li>{@code PIECE}（JSON 的 {@code piece}）：点必须落在某一块拼图 piece 内</li>
      * </ul>
-     * 结果按结构 id 排序，保证同一位置解析结果确定。
+     * 自定义池没有 {@code bounding_box} 概念，按「包围盒或任一块拼图命中」宽松判定。
      */
     public static List<Candidate> candidates(ServerLevel level, BlockPos pos) {
         StructureManager manager = level.structureManager();
@@ -98,6 +112,21 @@ public final class StructureSpawnPools {
         }
         List<Candidate> out = new ArrayList<>();
         for (Structure structure : all.keySet()) {
+            ResourceLocation id = idOf(level, structure);
+
+            WeightedRandomList<MobSpawnSettings.SpawnerData> custom = CustomStructurePools.poolFor(id);
+            if (custom != null) {
+                if (!insideAny(manager, pos, structure)) {
+                    continue;
+                }
+                out.add(new Candidate(id, structure, StructureSpawnOverride.BoundingBoxType.STRUCTURE, custom, Source.CUSTOM));
+                continue;
+            }
+
+            if (isBlacklisted(level, structure, id)) {
+                continue;
+            }
+
             StructureSpawnOverride override = structure.spawnOverrides().get(MobCategory.MONSTER);
             if (override == null) {
                 continue;
@@ -105,9 +134,11 @@ public final class StructureSpawnPools {
             if (!contains(manager, pos, structure, override.boundingBox())) {
                 continue;
             }
-            out.add(new Candidate(idOf(level, structure), structure, override.boundingBox(), override.spawns()));
+            out.add(new Candidate(id, structure, override.boundingBox(), override.spawns(), Source.VANILLA));
         }
-        out.sort(Comparator.comparing(candidate -> candidate.id().toString()));
+        out.sort(Comparator.<Candidate>comparingInt(candidate ->
+                        candidate.source() == Source.CUSTOM ? 0 : 1)
+                .thenComparing(candidate -> candidate.id().toString()));
         return out;
     }
 
@@ -119,19 +150,10 @@ public final class StructureSpawnPools {
                 .toList();
     }
 
-    private static boolean contains(StructureManager manager, BlockPos pos, Structure structure,
-                                    StructureSpawnOverride.BoundingBoxType boundingBox) {
-        if (boundingBox == StructureSpawnOverride.BoundingBoxType.PIECE) {
-            return manager.getStructureWithPieceAt(pos, structure) != null;
-        }
-        StructureStart start = manager.getStructureAt(pos, structure);
-        return start != null && start.isValid();
-    }
-
     /**
      * 供配方条件使用：判断 {@code pos} 是否落在指定结构内。
      * <p>
-     * 这里比刷怪池的判定宽松一档——包围盒命中或任一块拼图命中都算，
+     * 比刷怪池的判定宽松一档——包围盒命中或任一块拼图命中都算，
      * 因为配方条件表达的是"在哪能用"，不该被 piece 边界卡住。
      */
     public static boolean insideStructure(ServerLevel level, BlockPos pos, ResourceLocation structureId) {
@@ -139,9 +161,7 @@ public final class StructureSpawnPools {
         if (structure == null) {
             return false;
         }
-        StructureManager manager = level.structureManager();
-        return manager.getStructureAt(pos, structure) != null
-                || manager.getStructureWithPieceAt(pos, structure) != null;
+        return insideAny(level.structureManager(), pos, structure);
     }
 
     /** 同上，但按结构标签匹配。 */
@@ -153,9 +173,7 @@ public final class StructureSpawnPools {
         }
         StructureManager manager = level.structureManager();
         for (Holder<Structure> holder : holders.get()) {
-            Structure structure = holder.value();
-            if (manager.getStructureAt(pos, structure) != null
-                    || manager.getStructureWithPieceAt(pos, structure) != null) {
+            if (insideAny(manager, pos, holder.value())) {
                 return true;
             }
         }
@@ -171,6 +189,47 @@ public final class StructureSpawnPools {
      */
     public static BlockPos requirementPos(BlockEntity blockEntity) {
         return blockEntity.getBlockPos();
+    }
+
+    /** 结构黑名单：id 按名字、{@code #tag} 按标签匹配。 */
+    private static boolean isBlacklisted(ServerLevel level, Structure structure, ResourceLocation id) {
+        List<String> blacklist = CsmConfig.structureBlacklist();
+        if (blacklist.isEmpty()) {
+            return false;
+        }
+        for (String entry : blacklist) {
+            if (entry.startsWith("#")) {
+                ResourceLocation tagId = ResourceLocation.tryParse(entry.substring(1));
+                if (tagId == null) {
+                    continue;
+                }
+                Holder<Structure> holder = level.registryAccess()
+                        .registryOrThrow(Registries.STRUCTURE)
+                        .wrapAsHolder(structure);
+                if (holder.is(TagKey.create(Registries.STRUCTURE, tagId))) {
+                    return true;
+                }
+            } else {
+                ResourceLocation blacklistedId = ResourceLocation.tryParse(entry);
+                if (blacklistedId != null && blacklistedId.equals(id)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean contains(StructureManager manager, BlockPos pos, Structure structure,
+                                    StructureSpawnOverride.BoundingBoxType boundingBox) {
+        if (boundingBox == StructureSpawnOverride.BoundingBoxType.PIECE) {
+            return manager.getStructureWithPieceAt(pos, structure) != null;
+        }
+        return insideAny(manager, pos, structure);
+    }
+
+    private static boolean insideAny(StructureManager manager, BlockPos pos, Structure structure) {
+        StructureStart start = manager.getStructureAt(pos, structure);
+        return (start != null && start.isValid()) || manager.getStructureWithPieceAt(pos, structure) != null;
     }
 
     private static ResourceLocation idOf(ServerLevel level, Structure structure) {

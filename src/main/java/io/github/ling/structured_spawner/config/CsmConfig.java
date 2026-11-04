@@ -2,6 +2,8 @@ package io.github.ling.structured_spawner.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+import java.util.List;
+
 /**
  * 服务端配置。
  * <p>
@@ -31,6 +33,15 @@ public final class CsmConfig {
                     "SUPPRESS = 该结构内不刷怪；FALLBACK = 回退群系池。")
             .defineEnum("emptySpawnOverride", EmptyOverrideBehavior.SUPPRESS);
 
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> STRUCTURE_BLACKLIST = BUILDER
+            .comment("结构黑名单：列入的结构不再使用原版刷怪表（spawn_overrides），直接回退群系池。",
+                    "写法：结构 id（如 minecraft:fortress）或结构标签（如 #minecraft:village）。",
+                    "若同时用数据包 structure_spawn_pool 给该结构定义了自定义池，自定义池仍然生效——",
+                    "这样就等于「先禁掉默认行为，再自己定义」。")
+            .defineListAllowEmpty("structureBlacklist", List.of(),
+                    () -> "minecraft:fortress",
+                    CsmConfig::isValidBlacklistEntry);
+
     public static final ModConfigSpec.BooleanValue LOG_RESOLUTION = BUILDER
             .comment("在日志中打印结构池解析结果，用于排查判定问题。")
             .define("logStructureResolution", false);
@@ -51,5 +62,17 @@ public final class CsmConfig {
 
     public static boolean logResolution() {
         return SPEC.isLoaded() && LOG_RESOLUTION.get();
+    }
+
+    public static List<String> structureBlacklist() {
+        return SPEC.isLoaded() ? List.copyOf(STRUCTURE_BLACKLIST.get()) : List.of();
+    }
+
+    private static boolean isValidBlacklistEntry(Object value) {
+        if (!(value instanceof String entry) || entry.isBlank()) {
+            return false;
+        }
+        String raw = entry.startsWith("#") ? entry.substring(1) : entry;
+        return net.minecraft.resources.ResourceLocation.tryParse(raw) != null;
     }
 }

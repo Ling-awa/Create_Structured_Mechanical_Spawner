@@ -69,8 +69,14 @@ public final class CsmDebugCommand {
             String pool = candidate.pool().isEmpty()
                     ? "<空表：结构内禁止自然刷怪>"
                     : describe(candidate.pool().unwrap());
+            String origin = candidate.source() == StructureSpawnPools.Source.CUSTOM ? "自定义池" : "原版表";
             source.sendSuccess(() -> Component.literal("[CSM] - " + candidate.id()
-                    + " [" + candidate.boundingBox().getSerializedName() + "] " + pool), false);
+                    + " [" + candidate.boundingBox().getSerializedName() + " | " + origin + "] " + pool), false);
+        }
+
+        List<String> blacklist = CsmConfig.structureBlacklist();
+        if (!blacklist.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("[CSM] 黑名单（不使用原版表）：" + String.join(", ", blacklist)), false);
         }
 
         StructureSpawnPools.Pick pick = StructureSpawnPools.pick(source.getLevel(), pos);
